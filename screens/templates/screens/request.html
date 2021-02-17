@@ -1,0 +1,344 @@
+<head>  
+    <meta charset="UTF-8">  
+    <title>Home</title>  
+    {% load static %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    
+    <script src="{% static 'bootstrap.min.js' %}"></script>
+    <script src="{% static 'bootstrap.bundle.min.js' %}"></script>
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" >
+    <link rel="stylesheet" href="{% static 'custom-styles.css' %}" >
+
+    <!--Font Awesome-->
+    <link rel="stylesheet" href="https://netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+    <!--Select2-->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <!--SweetAlert-->
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+
+    <!--Getting companies with their associated countries, and setting info pop up-->
+    <script type="text/javascript">
+        var companies = JSON.parse("{{companies|escapejs}}");
+
+        $(window).load(function () {
+            // For the first info button
+            $(".trigger_popup_fricc_1").click(function(){
+            $('.hover_bkgr_fricc_1').show();
+            });
+            $('.hover_bkgr_fricc_1').click(function(){
+                $('.hover_bkgr_fricc_1').hide();
+            });
+            $('.popupCloseButton_1').click(function(){
+                $('.hover_bkgr_fricc_1').hide();
+            });
+
+            // For the second info button
+            $(".trigger_popup_fricc_2").click(function(){
+            $('.hover_bkgr_fricc_2').show();
+            });
+            $('.hover_bkgr_fricc_2').click(function(){
+                $('.hover_bkgr_fricc_2').hide();
+            });
+            $('.popupCloseButton_2').click(function(){
+                $('.hover_bkgr_fricc_2').hide();
+            });
+        });
+    </script>
+
+    <!--Using Select2 to set up select boxes-->
+    <!--Setting up cascading company list-->
+    <script type="text/javascript">
+
+        $(document).ready(function() {
+            $("#countryCode").select2({
+                placeholder: "Code",
+                allowClear: true
+            });
+            $('#opCountries').select2({
+                placeholder: "Operation Countries",
+                allowClear: true
+            });
+            $('#companyName').select2({
+                placeholder: "Company Name",
+                allowClear: true,
+                tags: true
+            });
+            $('#objectives').select2({
+                placeholder: "Objectives",
+                allowClear: true,
+                tags: true
+            });
+        });
+
+
+        // Company List
+        function enableCompanySelection(){
+            companySel = document.getElementById("companyName");
+            
+            // Get selections
+            var values = $('#opCountries').val();
+            if(values == null) {
+                companySel.length = 1;
+                companySel.setAttribute("disabled", "true");
+                return;
+            }
+            
+            companySel.removeAttribute("disabled");
+            // Compare each selection to each country in every company
+            companySel.length = 1;
+            for(var i = 0; i < companies.length; i++){
+
+                var len = 1;
+                if(companies[i][1][0].length > 1)
+                    len = companies[i][1].length;
+
+                console.log(len);
+                for(var j = 0; j < len; j++){
+                    for(var k = 0; k < values.length; k++){
+                        var added = false;
+                        if(len > 1){
+                            if(values[k] === companies[i][1][j]){
+                            var opt = document.createElement('option');
+                            opt.text = companies[i][0];
+                            companySel.appendChild(opt);
+                            added = true;
+                            }
+                        }else{
+                            console.log(values[k]);
+                            if(values[k] === companies[i][1]){
+                            var opt = document.createElement('option');
+                            opt.text = companies[i][0];
+                            companySel.appendChild(opt);
+                            added = true;
+                        }
+                        }
+                        if(added) break;
+                    }
+                }
+            }
+        }
+        function backToHomepage(){
+            location.href = "/";
+        }
+
+        function validateForm(){
+            let valid = true;
+            $('[required]').each(function() {
+                if ($(this).is(':invalid') || !$(this).val()) valid = false;
+            })
+            return valid;
+        }
+
+
+        function submitForm(){
+            /* if (confirm("Are you sure you want to book this appointment?"))
+                return true;
+            return false; */
+            swal({
+                title: "Appointment Request",
+                text: "Please Confirm Your Request.",
+                icon: "info",
+                buttons: true,
+                dangerMode: false,
+                })
+                .then((willconfirm) => {
+                if (willconfirm) {
+                    if(validateForm()) 
+                        document.getElementById("app-form").submit();
+                    else
+                        swal({
+                            title: "Missing Info",
+                            text: "Please Fill All Required Fields.",
+                            icon: "warning",
+                            dangerMode: true,
+                            })
+                } else {
+                    swal("Request Not Sent");
+                }
+            });
+        }
+    </script>
+</head>
+
+
+<body style="margin: auto; margin-top: 5rem; max-width: 500px;">
+
+    <!--Back button-->
+    <i class="fa fa-arrow-left fa-lg" aria-hidden="true" onclick="backToHomepage()"></i>
+
+    <div class="container">
+        <!--Title-->
+        <div class="container">
+            <div class="col offset-md-1" style="margin-bottom: 2rem;">
+                <h1>Company Information</h1>
+            </div>
+        </div>
+
+        <!--Form-->
+        <form id="app-form" name="app-form" method="POST" action="/confirmation">
+            {% csrf_token %}
+            <!-- First name and last name row-->
+            <div class="row align-items-start">
+                <div class="col">
+                    <input 
+                    type="text" 
+                    class="form-control" 
+                    name="firstName" 
+                    placeholder="First Name"
+                    onkeypress="return /[a-z]/i.test(event.key)"
+                    required>
+                </div>
+
+                <div class="col">
+                    <input 
+                    type="text" 
+                    class="form-control" 
+                    name="lastName" 
+                    placeholder="Last Name"
+                    onkeypress="return /[a-z]/i.test(event.key)"
+                    required>
+                </div>
+            </div>
+
+            <br/>
+
+            <!--Email row-->
+            <div class="row align-items-start">
+                <div class="col">
+                    <input 
+                    type="email" 
+                    class="form-control" 
+                    name="email" 
+                    placeholder="Work Email Address"
+                    required>
+                </div>
+            </div>
+
+            <br/>
+
+            <!--Phone number row-->
+            <div class="row align-items-start">
+                <div class="col-md-6">
+                    <select class="form-select" name="countryCode" id="countryCode" style="width: 100%;" required>
+                        <option></option>
+                        {% for country in country_codes %}
+                        {% if country.callingCodes.0 != "+" %}
+                        <option value={{country.callingCodes.0}}>(+{{country.callingCodes.0}}) {{country.name}}</option>
+                        {% endif %}
+                        {% endfor %}
+                      </select>
+                </div>
+
+                <div class="col">
+                    <input 
+                    type="number" 
+                    class="form-control" 
+                    name="phoneNumber" 
+                    placeholder="Phone Number">
+                </div>
+            </div>
+
+            <br/> <br/>
+
+            <!--Operation Countries & info button row-->
+            <div class="row align-items-start">
+                <div class="col-md-10">
+                    <select class="form-select" name="opCountries" id="opCountries" onchange="enableCompanySelection()" style="width: 100%;" multiple required>
+                        <option>Egypt</option>
+                        <option>USA</option>
+                        <option>Morocco</option>
+                      </select>
+                </div>
+
+                <div class="col-md-2" style="padding-top: 0.3rem;">
+                    <i 
+                    class="icon-info-sign icon-2x trigger_popup_fricc_1">
+                    </i>
+                    <div class="hover_bkgr_fricc_1">
+                        <span class="helper"></span>
+                        <div>
+                            <div class="popupCloseButton_1">&times;</div>
+                            <p>You can select more than one country</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <br/>
+
+            <!--Company Name & info button row-->
+            <div class="row align-items-start">
+                <div class="col-md-10">
+                    <select class="form-select" id="companyName" name="companyName" style="width: 100%;" disabled required>
+                        <option></option>
+                      </select>
+                </div>
+
+                <div class="col-md-2" style="padding-top: 0.3rem;">
+                    <i 
+                    class="icon-info-sign icon-2x trigger_popup_fricc_2">
+                    </i>
+                    <div class="hover_bkgr_fricc_2">
+                        <span class="helper"></span>
+                        <div>
+                            <div class="popupCloseButton_2">&times;</div>
+                            <p>You can select a company</br>or add your own.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <br/>
+
+            <!--Objective row-->
+            <div class="row align-items-start">
+                <div class="col">
+                    <select id="objectives" name="objectives" style="width: 100%;" multiple required>
+                            <option>Complaint</option>
+                            <option>Suggestion</option>
+                    </select>
+                </div>
+            </div>
+
+            <br/>
+
+            <!--Description row-->
+            <div class="row align-items-start">
+                <div class="col">
+                    <textarea
+                    name="description"
+                    class="form-control"
+                    placeholder="More Details/Description"
+                    required>
+                    </textarea>
+                </div>
+            </div>
+
+            <br/>
+
+            <!--Submit button row-->
+            <div class="row-cols-3 align-items-start">
+                <div class="col offset-md-4">
+                    <input
+                    id="submitBtn"
+                    name="submitBtn" 
+                    type="button" 
+                    class="form-control btn btn-primary" 
+                    value="Request Appointment"
+                    onclick="submitForm()"
+                    style="font-size: 16px; width:fit-content;">
+                </div>
+            </div>
+
+            <br/>
+
+        </form>
+
+
+
+    </div>
+</body>
