@@ -27,7 +27,7 @@ SECRET_KEY = '7*$^osd%a@6-v-dyi4j!+*(=#4&^_j3p^8o*i_jlq1bditc@+-'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['provyper.herokuapp.com', '127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
