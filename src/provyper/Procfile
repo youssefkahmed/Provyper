@@ -1,1 +1,0 @@
-web: gunicorn provyper.wsgi --log-file -
